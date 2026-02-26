@@ -1,6 +1,16 @@
 import { NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
 
+const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+};
+
+export async function OPTIONS() {
+    return NextResponse.json({}, { headers: corsHeaders });
+}
+
 export async function POST(req: Request) {
     try {
         const body = await req.json();
@@ -9,7 +19,7 @@ export async function POST(req: Request) {
         if (!email || !paymentId) {
             return NextResponse.json(
                 { error: "Missing required fields (email, paymentId)" },
-                { status: 400 }
+                { status: 400, headers: corsHeaders }
             );
         }
 
@@ -71,12 +81,12 @@ export async function POST(req: Request) {
 
         const info = await transporter.sendMail(mailOptions);
 
-        return NextResponse.json({ success: true, messageId: info.messageId });
+        return NextResponse.json({ success: true, messageId: info.messageId }, { headers: corsHeaders });
     } catch (error: any) {
         console.error("Error sending receipt email:", error);
         return NextResponse.json(
             { error: "Internal Server Error", details: error.message },
-            { status: 500 }
+            { status: 500, headers: corsHeaders }
         );
     }
 }

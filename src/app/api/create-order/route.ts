@@ -1,6 +1,16 @@
 import { NextResponse } from 'next/server';
 import Razorpay from 'razorpay';
 
+const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+};
+
+export async function OPTIONS() {
+    return NextResponse.json({}, { headers: corsHeaders });
+}
+
 export async function POST(request: Request) {
     try {
         const instance = new Razorpay({
@@ -18,12 +28,12 @@ export async function POST(request: Request) {
         const order = await instance.orders.create(options);
 
         // Return the full order payload
-        return NextResponse.json({ order });
+        return NextResponse.json({ order }, { headers: corsHeaders });
     } catch (error: any) {
         console.error("Error creating Razorpay order:", error);
         return NextResponse.json(
             { error: error.message || "Something went wrong" },
-            { status: 500 }
+            { status: 500, headers: corsHeaders }
         );
     }
 }

@@ -46,9 +46,15 @@ export default function PaymentPage() {
                 });
                 await loadScript();
 
+                // Get API base URL (Vercel uses absolute URLs for mobile builds)
+                const getApiUrl = (path: string) => {
+                    const baseUrl = process.env.NEXT_PUBLIC_API_URL || '';
+                    return `${baseUrl}${path}`;
+                };
+
                 // Pre-fetch order so we can open Razorpay synchronously on click
                 try {
-                    const res = await fetch('/api/create-order', { method: 'POST' });
+                    const res = await fetch(getApiUrl('/api/create-order'), { method: 'POST' });
                     const data = await res.json();
                     if (!data.error) {
                         setOrderData(data.order);
@@ -103,7 +109,8 @@ export default function PaymentPage() {
 
                         // 2. Send email receipt
                         if (userEmail) {
-                            await fetch('/api/send-receipt', {
+                            const baseUrl = process.env.NEXT_PUBLIC_API_URL || '';
+                            await fetch(`${baseUrl}/api/send-receipt`, {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({

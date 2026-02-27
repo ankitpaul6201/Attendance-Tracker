@@ -12,8 +12,12 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
     const supabase = createSupabaseClient();
 
     useEffect(() => {
-        // Check existing session first
-        supabase.auth.getSession().then(({ data: { session } }) => {
+        supabase.auth.getSession().then(async ({ data: { session }, error }) => {
+            if (error) {
+                console.warn("Session error detected, clearing local auth state:", error.message);
+                await supabase.auth.signOut();
+                localStorage.removeItem('attendance-tracker-auth');
+            }
             if (session) {
                 setAuthenticated(true);
             } else {

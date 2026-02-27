@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { LazyMotion, domAnimation, m } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 interface ComplianceRingProps {
@@ -26,35 +26,37 @@ export function ComplianceRing({
 
     return (
         <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
-            {/* Background Ring */}
-            <svg className="w-full h-full rotate-[-90deg] overflow-visible relative z-10">
-                <circle
-                    cx={size / 2}
-                    cy={size / 2}
-                    r={radius}
-                    fill="none"
-                    stroke="#1e293b" // Dark gray/navy
-                    strokeWidth={strokeWidth}
-                />
-                {/* Progress Ring */}
-                <motion.circle
-                    cx={size / 2}
-                    cy={size / 2}
-                    r={radius}
-                    fill="none"
-                    stroke={color}
-                    strokeWidth={strokeWidth}
-                    strokeDasharray={circumference}
-                    strokeDashoffset={offset}
-                    strokeLinecap="round"
-                    initial={{ strokeDashoffset: circumference }}
-                    animate={{ strokeDashoffset: offset }}
-                    transition={{ duration: 1, ease: "easeOut" }}
-                    style={{
-                        filter: hasProgress ? `drop-shadow(0 0 6px ${color})` : 'none'
-                    }}
-                />
-            </svg>
+            <LazyMotion features={domAnimation}>
+                {/* Background Ring */}
+                <svg className="w-full h-full rotate-[-90deg] overflow-visible relative z-10">
+                    <circle
+                        cx={size / 2}
+                        cy={size / 2}
+                        r={radius}
+                        fill="none"
+                        stroke="#1e293b" // Dark gray/navy
+                        strokeWidth={strokeWidth}
+                    />
+                    {/* Progress Ring */}
+                    <m.circle
+                        cx={size / 2}
+                        cy={size / 2}
+                        r={radius}
+                        fill="none"
+                        stroke={color}
+                        strokeWidth={strokeWidth}
+                        strokeDasharray={circumference}
+                        strokeDashoffset={offset}
+                        strokeLinecap="round"
+                        initial={{ strokeDashoffset: circumference }}
+                        animate={{ strokeDashoffset: offset }}
+                        transition={{ duration: 1, ease: "easeOut" }}
+                        style={{
+                            filter: hasProgress ? `drop-shadow(0 0 6px ${color})` : 'none'
+                        }}
+                    />
+                </svg>
+            </LazyMotion>
             {/* Inner Text or Icon could go here if needed, but usually overlayed externally */}
         </div>
     );

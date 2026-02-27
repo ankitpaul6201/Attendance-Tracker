@@ -25,7 +25,7 @@ export const StatsBlock = ({ label, value, subtext, highlight = false, className
             <span className="text-gray-400 text-sm font-medium tracking-wide uppercase mb-2 z-10">{label}</span>
             <span className={cn(
                 "text-4xl font-bold mb-1 z-10",
-                highlight ? "text-[var(--color-accent-cyan)] glow-text" : "text-white"
+                highlight ? "text-[var(--color-accent-cyan)] glow-text" : "text-[var(--foreground)]"
             )}>
                 {value}
             </span>

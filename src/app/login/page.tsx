@@ -6,9 +6,10 @@ import { useRouter } from "next/navigation";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { NeoButton } from "@/components/ui/NeoButton";
 import { Lock, Mail, User } from "lucide-react";
-import { motion } from "framer-motion";
+import { LazyMotion, domAnimation, m } from "framer-motion";
 
 import { Logo } from "@/components/ui/Logo";
+import { AlertModal } from "@/components/ui/AlertModal";
 
 export default function LoginPage() {
     const [email, setEmail] = useState("");
@@ -17,12 +18,18 @@ export default function LoginPage() {
     const [isSignUp, setIsSignUp] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [alertMessage, setAlertMessage] = useState<{ title: string, description: string, type: 'error' | 'success' | 'info' } | null>(null);
     const router = useRouter();
     const supabase = createSupabaseClient();
 
     useEffect(() => {
         const checkSession = async () => {
-            const { data: { session } } = await supabase.auth.getSession();
+            const { data: { session }, error } = await supabase.auth.getSession();
+            if (error) {
+                console.warn("Session error in login:", error.message);
+                await supabase.auth.signOut();
+                localStorage.removeItem('attendance-tracker-auth');
+            }
             if (session) {
                 router.replace("/dashboard");
             }
@@ -60,7 +67,11 @@ export default function LoginPage() {
                 if (data.session) {
                     router.push("/dashboard");
                 } else {
-                    alert("Account created! Check your email for the confirmation link.");
+                    setAlertMessage({
+                        title: "Account Created",
+                        description: "Account created! Check your email for the confirmation link.",
+                        type: "success"
+                    });
                 }
 
             } else {
@@ -79,6 +90,7 @@ export default function LoginPage() {
     };
 
     return (
+        <LazyMotion features={domAnimation}>
         <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
             {/* Background Ambient Glow */}
             <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[var(--color-primary-start)]/20 rounded-full blur-[100px] -z-10 animate-float" />
@@ -86,7 +98,7 @@ export default function LoginPage() {
 
             <GlassCard className="max-w-md w-full p-8 relative z-10">
                 <div className="flex justify-center mb-8">
-                    <motion.div
+                    <m.div
                         animate={{ rotateY: 360 }}
                         transition={{ duration: 5, repeat: Infinity, ease: "linear" }}
                         className="relative w-20 h-20 flex items-center justify-center transform-gpu"
@@ -101,11 +113,11 @@ export default function LoginPage() {
                         <div className="relative z-10 drop-shadow-[0_0_15px_var(--color-primary-start)]">
                             <Logo size={48} />
                         </div>
-                    </motion.div>
+                    </m.div>
                 </div>
 
                 <div className="text-center mb-8">
-                    <h1 className="text-3xl font-bold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent mb-2">
+                    <h1 className="text-3xl font-bold bg-gradient-to-r from-[var(--foreground)] to-gray-400 bg-clip-text text-transparent mb-2">
                         {isSignUp ? "Create Account" : "Welcome Back"}
                     </h1>
                     <p className="text-gray-400 text-sm">
@@ -116,15 +128,16 @@ export default function LoginPage() {
                 <form onSubmit={handleAuth} className="space-y-4">
                     {isSignUp && (
                         <div className="space-y-2">
-                            <label className="text-sm text-gray-400 ml-1">Full Name</label>
+                            <label htmlFor="full-name" className="text-sm text-gray-400 ml-1">Full Name</label>
                             <div className="relative">
                                 <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
                                 <input
+                                    id="full-name"
                                     type="text"
                                     placeholder="John Doe"
                                     value={fullName}
                                     onChange={(e) => setFullName(e.target.value)}
-                                    className="w-full bg-white/5 border border-white/10 rounded-[var(--radius-md)] py-3 pl-10 pr-4 text-white focus:outline-none focus:border-[var(--color-accent-cyan)]/50 focus:bg-white/10 transition-all placeholder:text-gray-600"
+                                    className="w-full bg-[var(--foreground)]/5 border border-[var(--foreground)]/10 rounded-[var(--radius-md)] py-3 pl-10 pr-4 text-[var(--foreground)] focus:outline-none focus:border-[var(--color-accent-cyan)]/50 focus:bg-[var(--foreground)]/10 transition-all placeholder:text-gray-600"
                                     required
                                 />
                             </div>
@@ -132,30 +145,32 @@ export default function LoginPage() {
                     )}
 
                     <div className="space-y-2">
-                        <label className="text-sm text-gray-400 ml-1">Email</label>
+                        <label htmlFor="email" className="text-sm text-gray-400 ml-1">Email</label>
                         <div className="relative">
                             <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
                             <input
+                                id="email"
                                 type="email"
                                 placeholder="student@example.com"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
-                                className="w-full bg-white/5 border border-white/10 rounded-[var(--radius-md)] py-3 pl-10 pr-4 text-white focus:outline-none focus:border-[var(--color-accent-cyan)]/50 focus:bg-white/10 transition-all placeholder:text-gray-600"
+                                className="w-full bg-[var(--foreground)]/5 border border-[var(--color-border)] rounded-[var(--radius-md)] py-3 pl-10 pr-4 text-[var(--foreground)] focus:outline-none focus:border-[var(--color-accent-cyan)]/50 focus:bg-[var(--foreground)]/10 transition-all placeholder:text-gray-600"
                                 required
                             />
                         </div>
                     </div>
 
                     <div className="space-y-2">
-                        <label className="text-sm text-gray-400 ml-1">Password</label>
+                        <label htmlFor="password" className="text-sm text-gray-400 ml-1">Password</label>
                         <div className="relative">
                             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
                             <input
+                                id="password"
                                 type="password"
                                 placeholder="••••••••"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                className="w-full bg-white/5 border border-white/10 rounded-[var(--radius-md)] py-3 pl-10 pr-4 text-white focus:outline-none focus:border-[var(--color-accent-cyan)]/50 focus:bg-white/10 transition-all placeholder:text-gray-600"
+                                className="w-full bg-[var(--foreground)]/5 border border-[var(--color-border)] rounded-[var(--radius-md)] py-3 pl-10 pr-4 text-[var(--foreground)] focus:outline-none focus:border-[var(--color-accent-cyan)]/50 focus:bg-[var(--foreground)]/10 transition-all placeholder:text-gray-600"
                                 required
                             />
                         </div>
@@ -188,6 +203,15 @@ export default function LoginPage() {
                     </button>
                 </div>
             </GlassCard>
+
+            <AlertModal
+                isOpen={!!alertMessage}
+                onClose={() => setAlertMessage(null)}
+                title={alertMessage?.title || ""}
+                description={alertMessage?.description || ""}
+                type={alertMessage?.type}
+            />
         </div>
+        </LazyMotion>
     );
 }

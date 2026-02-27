@@ -6,6 +6,7 @@ import { createSupabaseClient } from "@/lib/supabase/client";
 import { CreditCard } from "lucide-react";
 import { NeoButton } from "@/components/ui/NeoButton";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
+import { AlertModal } from "@/components/ui/AlertModal";
 import AuthGuard from "@/components/auth/AuthGuard";
 
 export default function PaymentPage() {
@@ -13,10 +14,12 @@ export default function PaymentPage() {
     const [userName, setUserName] = useState<string | null>(null);
     const [userEmail, setUserEmail] = useState<string | null>(null);
     const [orderData, setOrderData] = useState<any>(null);
+    const [alertMessage, setAlertMessage] = useState<{ title: string, description: string, type: 'error' | 'success' | 'info', redirectUrl?: string } | null>(null);
     const router = useRouter();
     const supabase = createSupabaseClient();
 
     useEffect(() => {
+        const controller = new AbortController();
         const checkStatusAndInitPayment = async () => {
             const { data: { session } } = await supabase.auth.getSession();
             if (session?.user) {
@@ -31,7 +34,7 @@ export default function PaymentPage() {
                     setUserEmail(userRecord.email);
                     if (userRecord.subscription_active) {
                         router.replace("/dashboard");
-                        return; // user is already active, don't create order
+                        return;
                     }
                 }
 
@@ -54,12 +57,13 @@ export default function PaymentPage() {
 
                 // Pre-fetch order so we can open Razorpay synchronously on click
                 try {
-                    const res = await fetch(getApiUrl('/api/create-order'), { method: 'POST' });
+                    const res = await fetch(getApiUrl('/api/create-order'), { method: 'POST', signal: controller.signal });
                     const data = await res.json();
                     if (!data.error) {
                         setOrderData(data.order);
                     }
                 } catch (error) {
+                    if (error instanceof DOMException && error.name === 'AbortError') return;
                     console.error("Error creating order fetching:", error);
                 }
             } else {
@@ -67,16 +71,25 @@ export default function PaymentPage() {
             }
         };
         checkStatusAndInitPayment();
+        return () => controller.abort();
     }, [supabase, router]);
 
     const handlePayment = () => {
         if (!orderData) {
-            alert('Payment initializing. Please wait a moment and try again.');
+            setAlertMessage({
+                title: 'Initializing',
+                description: 'Payment initializing. Please wait a moment and try again.',
+                type: 'info'
+            });
             return;
         }
 
         if (!(window as any).Razorpay) {
-            alert("Razorpay SDK failed to load. Are you online?");
+            setAlertMessage({
+                title: 'Network Error',
+                description: 'Razorpay SDK failed to load. Are you online?',
+                type: 'error'
+            });
             return;
         }
 
@@ -122,11 +135,19 @@ export default function PaymentPage() {
                             }).catch(e => console.error("Receipt error:", e));
                         }
 
-                        alert('Payment Successful! Payment ID: ' + response.razorpay_payment_id);
-                        router.push('/dashboard');
+                        setAlertMessage({
+                            title: 'Payment Successful!',
+                            description: 'Payment ID: ' + response.razorpay_payment_id,
+                            type: 'success',
+                            redirectUrl: '/dashboard'
+                        });
                     } catch (err) {
                         console.error("Error finalizing payment:", err);
-                        alert("Payment succeeded but failed to update status. Please contact support.");
+                        setAlertMessage({
+                            title: 'Status Update Failed',
+                            description: 'Payment succeeded but failed to update status. Please contact support.',
+                            type: 'error'
+                        });
                     } finally {
                         setIsPaying(false);
                     }
@@ -147,7 +168,11 @@ export default function PaymentPage() {
 
             const rzp1 = new (window as any).Razorpay(options);
             rzp1.on('payment.failed', function (response: any) {
-                alert("Payment Failed: " + response.error.description);
+                setAlertMessage({
+                    title: 'Payment Failed',
+                    description: response.error.description,
+                    type: 'error'
+                });
                 setIsPaying(false);
             });
             rzp1.open();
@@ -160,19 +185,19 @@ export default function PaymentPage() {
     return (
         <AuthGuard>
             <ThemeProvider>
-                <div className="flex h-screen items-center justify-center bg-[#09090b] p-4 text-white relative overflow-hidden">
+                <div className="flex h-screen items-center justify-center bg-[var(--color-bg-start)] p-4 text-[var(--foreground)] relative overflow-hidden">
                     <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-[var(--color-primary-start)]/20 rounded-full blur-[120px] -z-10 animate-float pointer-events-none" />
                     <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-[var(--color-accent-blue)]/10 rounded-full blur-[100px] -z-10 animate-float pointer-events-none" style={{ animationDelay: '2s' }} />
 
-                    <div className="max-w-md w-full p-8 text-center space-y-8 relative z-10 bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl">
+                    <div className="max-w-md w-full p-8 text-center space-y-8 relative z-10 bg-[var(--foreground)]/5 backdrop-blur-xl border border-[var(--foreground)]/10 rounded-3xl shadow-2xl">
                         <div className="mx-auto w-20 h-20 bg-gradient-to-br from-[var(--color-primary-start)] to-[var(--color-accent-blue)] rounded-2xl flex items-center justify-center mb-6 shadow-lg rotate-3">
                             <CreditCard className="w-10 h-10 text-black" />
                         </div>
 
                         <div className="space-y-3">
-                            <h2 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">Unlock Dashboard</h2>
+                            <h2 className="text-3xl font-bold text-[var(--foreground)]">Unlock Dashboard</h2>
                             <p className="text-gray-400 text-sm leading-relaxed px-4">
-                                Complete the one-time payment of <span className="text-white font-bold">₹50</span> to access your attendance tracking dashboard.
+                                Complete the one-time payment of <span className="text-[var(--foreground)] font-bold">₹50</span> to access your attendance tracking dashboard.
                             </p>
                         </div>
 
@@ -186,7 +211,7 @@ export default function PaymentPage() {
                         <p className="text-xs text-gray-600 font-medium pb-2">Secured by Razorpay • Instant Activation</p>
 
                         {/* Sign Out Link */}
-                        <div className="pt-4 border-t border-white/10">
+                        <div className="pt-4 border-t border-[var(--color-border)]">
                             <button
                                 onClick={async () => {
                                     try {
@@ -199,7 +224,7 @@ export default function PaymentPage() {
                                         window.location.href = '/login';
                                     }
                                 }}
-                                className="text-sm text-gray-500 hover:text-white transition-colors"
+                                className="text-sm text-gray-500 hover:text-[var(--foreground)] transition-colors"
                             >
                                 Sign Out
                             </button>
@@ -207,6 +232,18 @@ export default function PaymentPage() {
                     </div>
                 </div>
             </ThemeProvider>
+
+            <AlertModal
+                isOpen={!!alertMessage}
+                onClose={() => {
+                    const redirect = alertMessage?.redirectUrl;
+                    setAlertMessage(null);
+                    if (redirect) router.push(redirect);
+                }}
+                title={alertMessage?.title || ""}
+                description={alertMessage?.description || ""}
+                type={alertMessage?.type}
+            />
         </AuthGuard>
     );
 }

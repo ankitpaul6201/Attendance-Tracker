@@ -7,6 +7,7 @@ import { Home, BookOpen, Calendar, Settings, LogOut } from "lucide-react";
 import { createSupabaseClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { Logo } from "@/components/ui/Logo";
+import { ThemeToggle } from "@/components/providers/ThemeToggle";
 
 const navItems = [
     { name: "Dashboard", href: "/dashboard", icon: Home },
@@ -37,7 +38,7 @@ const SidebarContent = ({ onClose }: { onClose?: () => void }) => {
         <div className="flex flex-col h-full bg-[var(--color-bg-start)] border-r border-[var(--color-border)]">
             <div className="p-8 flex items-center gap-3">
                 <Logo />
-                <h1 className="text-xl font-bold text-white tracking-wide">
+                <h1 className="text-xl font-bold text-[var(--foreground)] tracking-wide">
                     Attendance Tracker
                 </h1>
             </div>
@@ -54,21 +55,22 @@ const SidebarContent = ({ onClose }: { onClose?: () => void }) => {
                             className={cn(
                                 "flex items-center gap-3 px-4 py-3 rounded-[var(--radius-sm)] transition-all duration-200 group text-sm font-medium",
                                 isActive
-                                    ? "bg-[var(--color-primary-start)] text-black shadow-[0_0_15px_rgba(212,255,0,0.2)]"
-                                    : "text-gray-400 hover:text-white hover:bg-white/5"
+                                    ? "bg-[var(--color-primary-start)] text-[var(--color-bg-start)] neo-shadow"
+                                    : "text-[var(--foreground)] opacity-70 hover:opacity-100 hover:bg-[var(--color-border)]"
                             )}
                         >
-                            <Icon className={cn("w-5 h-5", isActive ? "text-black" : "text-gray-500 group-hover:text-white")} />
+                            <Icon className={cn("w-5 h-5", isActive ? "text-[var(--color-bg-start)]" : "text-[var(--foreground)] group-hover:text-[var(--primary-start)]")} />
                             <span>{item.name}</span>
                         </Link>
                     );
                 })}
             </nav>
 
-            <div className="p-4 border-t border-[var(--color-border)]">
+            <div className="p-4 border-t border-[var(--color-border)] flex flex-col gap-2">
+                <ThemeToggle />
                 <button
                     onClick={handleSignOut}
-                    className="flex items-center gap-3 w-full px-4 py-3 text-gray-500 hover:text-red-400 hover:bg-red-500/5 rounded-[var(--radius-sm)] transition-all duration-200 text-sm font-medium"
+                    className="flex items-center gap-3 w-full px-4 py-3 text-[var(--foreground)] opacity-70 hover:opacity-100 hover:text-red-400 hover:bg-red-500/10 rounded-[var(--radius-sm)] transition-all duration-200 text-sm font-medium"
                 >
                     <LogOut className="w-5 h-5" />
                     <span>Sign Out</span>

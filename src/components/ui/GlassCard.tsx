@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { motion, HTMLMotionProps } from "framer-motion";
+import { LazyMotion, domAnimation, m, HTMLMotionProps } from "framer-motion";
 
 interface GlassCardProps extends HTMLMotionProps<"div"> {
     children: React.ReactNode;
@@ -17,20 +17,22 @@ export const GlassCard = ({
     ...props
 }: GlassCardProps) => {
     return (
-        <motion.div
-            initial={hoverEffect ? { y: 0 } : undefined}
-            whileHover={hoverEffect ? { y: -5, boxShadow: "0 15px 30px rgba(0,0,0,0.2)" } : undefined}
-            transition={{ duration: 0.3 }}
-            className={cn(
-                "rounded-[var(--radius-lg)] p-6 transition-all duration-300",
-                variant === "default"
-                    ? "glass-card hover:border-[var(--color-border)] hover:bg-[var(--color-card-bg)]"
-                    : "glass-panel bg-[var(--color-card-bg)]",
-                className
-            )}
-            {...props}
-        >
-            {children}
-        </motion.div>
+        <LazyMotion features={domAnimation}>
+            <m.div
+                initial={hoverEffect ? { y: 0 } : undefined}
+                whileHover={hoverEffect ? { y: -5, boxShadow: "0 15px 30px rgba(0,0,0,0.2)" } : undefined}
+                transition={{ duration: 0.3 }}
+                className={cn(
+                    "rounded-[var(--radius-lg)] p-6 transition-all duration-300",
+                    variant === "default"
+                        ? "glass-card hover:border-[var(--color-border)] hover:bg-[var(--color-card-bg)]"
+                        : "glass-panel bg-[var(--color-card-bg)]",
+                    className
+                )}
+                {...props}
+            >
+                {children}
+            </m.div>
+        </LazyMotion>
     );
 };

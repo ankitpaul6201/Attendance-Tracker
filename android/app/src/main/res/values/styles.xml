@@ -3,20 +3,33 @@
 
     <!-- Base application theme. -->
     <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
-        <!-- Customize your theme here. -->
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
     </style>
 
+    <!--
+        NoActionBar theme used by the main Capacitor activity.
+        - windowDrawsSystemBarBackgrounds = true  → app can control status bar color
+        - statusBarColor = solid dark             → stops content drawing UNDER the status bar
+        - windowTranslucentStatus = false         → no translucent overlay
+        - fitsSystemWindows = false               → Capacitor handles insets itself via JS
+        This also fixes Razorpay checkout: Razorpay's Activity inherits this theme,
+        so its header no longer bleeds into the Android status bar.
+    -->
     <style name="AppTheme.NoActionBar" parent="Theme.AppCompat.DayNight.NoActionBar">
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
         <item name="android:background">@null</item>
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+        <item name="android:statusBarColor">#0A0A0A</item>
+        <item name="android:windowTranslucentStatus">false</item>
+        <item name="android:windowTranslucentNavigation">false</item>
+        <item name="android:fitsSystemWindows">false</item>
     </style>
-
 
     <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
         <item name="android:background">@drawable/splash</item>
     </style>
+
 </resources>

@@ -1,0 +1,40 @@
+Format-Hex : Cannot convert input of type System.Char to hexadecimal. To view the hexadecimal formatting of its string 
+representation, pipe it to the Out-String cmdlet before piping it to Format-Hex.
+At line:1 char:102
++ ... Attendance Tracker\src\app\login\page.tsx' -Raw)[91..95] | Format-Hex
++                                                                ~~~~~~~~~~
+    + CategoryInfo          : ParserError: (:) [Write-Error], WriteErrorException
+    + FullyQualifiedErrorId : FormatHexFailureTypeNotSupported,Format-Hex
+ 
+Format-Hex : Cannot convert input of type System.Char to hexadecimal. To view the hexadecimal formatting of its string 
+representation, pipe it to the Out-String cmdlet before piping it to Format-Hex.
+At line:1 char:102
++ ... Attendance Tracker\src\app\login\page.tsx' -Raw)[91..95] | Format-Hex
++                                                                ~~~~~~~~~~
+    + CategoryInfo          : ParserError: (:) [Write-Error], WriteErrorException
+    + FullyQualifiedErrorId : FormatHexFailureTypeNotSupported,Format-Hex
+ 
+Format-Hex : Cannot convert input of type System.Char to hexadecimal. To view the hexadecimal formatting of its string 
+representation, pipe it to the Out-String cmdlet before piping it to Format-Hex.
+At line:1 char:102
++ ... Attendance Tracker\src\app\login\page.tsx' -Raw)[91..95] | Format-Hex
++                                                                ~~~~~~~~~~
+    + CategoryInfo          : ParserError: (:) [Write-Error], WriteErrorException
+    + FullyQualifiedErrorId : FormatHexFailureTypeNotSupported,Format-Hex
+ 
+Format-Hex : Cannot convert input of type System.Char to hexadecimal. To view the hexadecimal formatting of its string 
+representation, pipe it to the Out-String cmdlet before piping it to Format-Hex.
+At line:1 char:102
++ ... Attendance Tracker\src\app\login\page.tsx' -Raw)[91..95] | Format-Hex
++                                                                ~~~~~~~~~~
+    + CategoryInfo          : ParserError: (:) [Write-Error], WriteErrorException
+    + FullyQualifiedErrorId : FormatHexFailureTypeNotSupported,Format-Hex
+ 
+Format-Hex : Cannot convert input of type System.Char to hexadecimal. To view the hexadecimal formatting of its string 
+representation, pipe it to the Out-String cmdlet before piping it to Format-Hex.
+At line:1 char:102
++ ... Attendance Tracker\src\app\login\page.tsx' -Raw)[91..95] | Format-Hex
++                                                                ~~~~~~~~~~
+    + CategoryInfo          : ParserError: (:) [Write-Error], WriteErrorException
+    + FullyQualifiedErrorId : FormatHexFailureTypeNotSupported,Format-Hex
+ 

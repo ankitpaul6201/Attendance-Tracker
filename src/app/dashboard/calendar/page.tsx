@@ -20,7 +20,7 @@ import {
     parseISO
 } from "date-fns";
 import { cn } from "@/lib/utils";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 
 import { MobileTopBar } from "@/components/layout/MobileTopBar";
 
@@ -43,7 +43,13 @@ export default function CalendarPage() {
     const fetchData = async () => {
         try {
             setLoading(true);
-            const { data: { session } } = await supabase.auth.getSession();
+            const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+            if (sessionError) {
+                console.warn("Session error in calendar:", sessionError.message);
+                await supabase.auth.signOut();
+                localStorage.removeItem('attendance-tracker-auth');
+                return;
+            }
             if (!session?.user) return;
             const user = session.user;
 
@@ -104,7 +110,7 @@ export default function CalendarPage() {
                     <GlassCard className="flex-1 p-6 flex flex-col">
                         <div className="flex items-center justify-between mb-6">
                             <div className="flex items-center gap-4">
-                                <h2 className="text-3xl font-bold text-white">
+                                <h2 className="text-3xl font-bold text-[var(--foreground)]">
                                     {format(currentMonth, "MMMM yyyy")}
                                 </h2>
                                 <div className="flex gap-2">
@@ -144,17 +150,20 @@ export default function CalendarPage() {
                                 else if (hasAbsent) statusColor = "bg-red-500/20 border-red-500/50";
 
                                 return (
-                                    <motion.div
+                                    <m.div
                                         key={day.toString()}
                                         initial={{ opacity: 0, scale: 0.9 }}
                                         animate={{ opacity: 1, scale: 1 }}
                                         transition={{ delay: dayIdx * 0.005 }}
+                                        role="button"
+                                        tabIndex={0}
+                                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setSelectedDate(day); }}
                                         onClick={() => setSelectedDate(day)}
                                         className={cn(
                                             "relative min-h-[80px] rounded-xl border p-2 cursor-pointer transition-all duration-200 flex flex-col justify-between group",
                                             isSelected
                                                 ? "bg-[var(--color-primary-start)] border-[var(--color-primary-start)] shadow-[0_0_15px_rgba(212,255,0,0.3)] z-10"
-                                                : "bg-white/5 border-white/5 hover:bg-white/10 hover:border-white/20",
+                                                : "bg-[var(--foreground)]/5 border-[var(--foreground)]/5 hover:bg-[var(--foreground)]/10 hover:border-[var(--foreground)]/20",
                                             !isCurrentMonth && "opacity-30 grayscale",
                                             statusColor && !isSelected && statusColor
                                         )}
@@ -169,9 +178,9 @@ export default function CalendarPage() {
                                         </div>
 
                                         <div className="flex flex-wrap gap-1 content-end">
-                                            {dayRecords.map((r, i) => (
+                                            {dayRecords.map((r) => (
                                                 <div
-                                                    key={i}
+                                                    key={r.id}
                                                     className={cn(
                                                         "w-1.5 h-1.5 rounded-full",
                                                         r.status === 'present' ? "bg-green-400" : "bg-red-400"
@@ -179,7 +188,7 @@ export default function CalendarPage() {
                                                 />
                                             ))}
                                         </div>
-                                    </motion.div>
+                                    </m.div>
                                 );
                             })}
                         </div>
@@ -190,7 +199,7 @@ export default function CalendarPage() {
                 <div className="lg:w-1/3 h-full flex flex-col gap-6">
                     {/* Attendance Details */}
                     <GlassCard className="p-6 h-full">
-                        <h3 className="text-xl font-bold text-white mb-1">
+                        <h3 className="text-xl font-bold text-[var(--foreground)] mb-1">
                             {format(selectedDate, "EEEE")}
                         </h3>
                         <p className="text-gray-400 mb-6">{format(selectedDate, "MMMM d, yyyy")}</p>
@@ -200,14 +209,14 @@ export default function CalendarPage() {
                                 <LoadingSpinner text="Beaming down records..." />
                             ) : selectedDayRecords.length > 0 ? (
                                 selectedDayRecords.map((record) => (
-                                    <motion.div
+                                    <m.div
                                         key={record.id}
                                         initial={{ x: 20, opacity: 0 }}
                                         animate={{ x: 0, opacity: 1 }}
-                                        className="p-4 rounded-lg bg-white/5 border border-white/10 flex items-center justify-between"
+                                        className="p-4 rounded-lg bg-[var(--foreground)]/5 border border-[var(--foreground)]/10 flex items-center justify-between"
                                     >
                                         <div>
-                                            <h4 className="font-bold text-white">{record.subjects?.name || "Unknown Subject"}</h4>
+                                            <h4 className="font-bold text-[var(--foreground)]">{record.subjects?.name || "Unknown Subject"}</h4>
                                             <div className="flex items-center gap-2 text-xs text-gray-500 mt-1">
                                                 <Clock className="w-3 h-3" />
                                                 <span>Recorded</span>
@@ -226,7 +235,7 @@ export default function CalendarPage() {
                                             )}
                                             {record.status === 'present' ? 'Present' : 'Absent'}
                                         </div>
-                                    </motion.div>
+                                    </m.div>
                                 ))
                             ) : (
                                 <div className="flex flex-col items-center justify-center py-8 text-center text-gray-500 h-full">
@@ -241,4 +250,3 @@ export default function CalendarPage() {
         </div>
     );
 }
-

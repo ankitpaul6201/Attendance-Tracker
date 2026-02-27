@@ -9,8 +9,11 @@
   --color-bg-end: #0A0A0A;
   --color-accent-cyan: var(--primary-start);
   /* Replaced Cyan with Lime for consistency */
-  --color-card-bg: #141414;
-  --color-border: #2A2A2A;
+  --color-card-bg: var(--card-bg, #141414);
+  --color-border: var(--border-color, #2A2A2A);
+
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
 
   --radius-sm: 8px;
   --radius-md: 12px;
@@ -46,8 +49,58 @@
   /* Default Theme Variables (Lime) */
   --primary-start: #D4FF00;
   --primary-end: #B8E600;
-  --shadow-glow-color: rgba(212, 255, 0, 0.4);
+  --shadow-glow-color: rgb(212, 255, 0);
 }
+
+.light {
+  --color-bg-start: #f4f4f5;
+  --color-bg-end: #e4e4e7;
+  --background: #f4f4f5;
+  --foreground: #09090b;
+
+  --color-card-bg: #ffffff;
+  --color-border: #d4d4d8;
+
+  /* Adjusted Lime for better contrast on Light Background */
+  --primary-start: #D4FF00;
+  --primary-end: #D4FF00;
+  --shadow-glow-color: rgba(212, 255, 0);
+}
+
+/* Fix ALL faded gray text in light mode — they become near-invisible on white */
+.light .text-gray-300,
+.light .text-gray-400,
+.light .text-gray-500 {
+  color: #000000 !important;
+  /* zinc-700 — dark enough on white */
+}
+
+.light .text-gray-600 {
+  color: #000000 !important;
+  /* zinc-800 */
+}
+
+.light .text-gray-700 {
+  color: #000000 !important;
+  /* zinc-900 */
+}
+
+/* Card / panel backgrounds stay white in light mode */
+.light .glass-card,
+.light .glass-panel {
+  background: #ffffff;
+  border-color: #d4d4d8;
+}
+
+/* Scrollbar in light mode */
+.light ::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.light ::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.25);
+}
+
 
 body {
   background: var(--color-bg-start);
@@ -77,15 +130,14 @@ body {
   border-radius: var(--radius-lg);
 }
 
-/* New Right Sidebar Style from reference */
 .right-sidebar {
-  background: #0F0F0F;
+  background: var(--color-card-bg);
   border-left: 1px solid var(--color-border);
 }
 
 .active-nav-item {
   background: var(--color-primary-start);
-  color: #000000;
+  color: var(--color-bg-start);
   box-shadow: 0 0 15px var(--shadow-glow-color);
 }
 
@@ -108,12 +160,12 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgb(0, 0, 0);
   border-radius: 999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgb(0, 0, 0);
 }
 
 /* Mobile Interaction Utilities */
@@ -123,4 +175,17 @@ body {
   user-select: none;
   touch-action: none;
   -webkit-tap-highlight-color: transparent;
+}
+
+/* Accessibility: Respect user reduced-motion preferences (WCAG 2.3.3) */
+@media (prefers-reduced-motion: reduce) {
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

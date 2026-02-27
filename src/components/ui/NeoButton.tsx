@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { motion, HTMLMotionProps } from "framer-motion";
+import { m, HTMLMotionProps } from "framer-motion";
 import { Loader2 } from "lucide-react";
 
 interface NeoButtonProps extends HTMLMotionProps<"button"> {
@@ -22,9 +22,9 @@ export const NeoButton = ({
 }: NeoButtonProps) => {
     const variants = {
         primary: "bg-[var(--color-primary-start)] text-black shadow-[var(--shadow-glow)] hover:shadow-[0_0_25px_var(--shadow-glow-color)] border border-transparent font-bold",
-        secondary: "bg-white/10 hover:bg-white/20 text-white border border-white/10 backdrop-blur-md",
+        secondary: "bg-[var(--foreground)]/10 hover:bg-[var(--foreground)]/20 text-[var(--foreground)] border border-[var(--foreground)]/10 backdrop-blur-md",
         danger: "bg-red-500/20 text-red-100 border border-red-500/30 hover:bg-red-500/30 hover:shadow-[0_0_20px_rgba(239,68,68,0.4)]",
-        ghost: "bg-transparent hover:bg-white/5 text-gray-300 hover:text-white border border-transparent"
+        ghost: "bg-transparent hover:bg-[var(--foreground)]/5 text-gray-500 hover:text-[var(--foreground)] border border-transparent"
     };
 
     const sizes = {
@@ -35,7 +35,7 @@ export const NeoButton = ({
     };
 
     return (
-        <motion.button
+        <m.button
             whileTap={{ scale: 0.96 }}
             whileHover={{ scale: 1.02 }}
             className={cn(
@@ -50,6 +50,6 @@ export const NeoButton = ({
         >
             {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
             {children}
-        </motion.button>
+        </m.button>
     );
 };

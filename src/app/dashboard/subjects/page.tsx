@@ -7,6 +7,8 @@ import { NeoButton } from "@/components/ui/NeoButton";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { Plus, BookOpen, Trash2, MoreVertical, Edit } from "lucide-react";
 import { AddSubjectModal } from "@/components/dashboard/AddSubjectModal";
+import { ConfirmModal } from "@/components/ui/ConfirmModal";
+import { AlertModal } from "@/components/ui/AlertModal";
 import { cn } from "@/lib/utils";
 
 import { MobileTopBar } from "@/components/layout/MobileTopBar";
@@ -19,18 +21,38 @@ interface Subject {
     target_attendance: number;
 }
 
+interface ModalState {
+    isModalOpen: boolean;
+    editingSubject: Subject | null;
+    subjectToDelete: { id: string; name: string } | null;
+    isDeleting: boolean;
+    alertMessage: { title: string; description: string; type: 'error' | 'success' | 'info' } | null;
+}
+
 export default function SubjectsPage() {
     const [subjects, setSubjects] = useState<Subject[]>([]);
     const [loading, setLoading] = useState(true);
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [editingSubject, setEditingSubject] = useState<Subject | null>(null);
     const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
+    const [modal, setModal] = useState<ModalState>({
+        isModalOpen: false,
+        editingSubject: null,
+        subjectToDelete: null,
+        isDeleting: false,
+        alertMessage: null,
+    });
+
     const supabase = createSupabaseClient();
 
     const fetchSubjects = async () => {
         try {
             setLoading(true);
-            const { data: { session } } = await supabase.auth.getSession();
+            const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+            if (sessionError) {
+                console.warn("Session error in subjects:", sessionError.message);
+                await supabase.auth.signOut();
+                localStorage.removeItem('attendance-tracker-auth');
+                return;
+            }
             if (!session?.user) return;
             const user = session.user;
 
@@ -53,32 +75,35 @@ export default function SubjectsPage() {
         fetchSubjects();
     }, []);
 
-    // Close menu when clicking outside
     useEffect(() => {
         const handleClickOutside = () => setActiveMenuId(null);
         window.addEventListener('click', handleClickOutside);
         return () => window.removeEventListener('click', handleClickOutside);
     }, []);
 
-    const handleDeleteSubject = async (id: string, name: string) => {
-        if (!confirm(`Are you sure you want to delete "${name}"? This will delete all attendance records for this subject.`)) return;
+    const promptDeleteSubject = (id: string, name: string) => {
+        setModal(prev => ({ ...prev, subjectToDelete: { id, name } }));
+        setActiveMenuId(null);
+    };
 
+    const handleDeleteConfirm = async () => {
+        if (!modal.subjectToDelete) return;
         try {
-            setLoading(true);
-            const { error } = await supabase.from('subjects').delete().eq('id', id);
+            setModal(prev => ({ ...prev, isDeleting: true }));
+            const { error } = await supabase.from('subjects').delete().eq('id', modal.subjectToDelete.id);
             if (error) throw error;
+            setModal(prev => ({ ...prev, subjectToDelete: null }));
             fetchSubjects();
         } catch (error) {
             console.error('Error deleting subject:', error);
-            alert("Failed to delete subject");
+            setModal(prev => ({ ...prev, subjectToDelete: null, alertMessage: { title: "Error", description: "Failed to delete subject", type: "error" } }));
         } finally {
-            setLoading(false);
+            setModal(prev => ({ ...prev, isDeleting: false }));
         }
     };
 
     const handleEditSubject = (subject: Subject) => {
-        setEditingSubject(subject);
-        setIsModalOpen(true);
+        setModal(prev => ({ ...prev, editingSubject: subject, isModalOpen: true }));
         setActiveMenuId(null);
     };
 
@@ -88,10 +113,10 @@ export default function SubjectsPage() {
             <div className="p-8 pt-6 max-w-5xl mx-auto space-y-8 pb-10">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
-                        <h2 className="text-3xl font-bold text-white">Subjects</h2>
+                        <h2 className="text-3xl font-bold text-[var(--foreground)]">Subjects</h2>
                         <p className="text-gray-400">Manage your course list and targets.</p>
                     </div>
-                    <NeoButton onClick={() => setIsModalOpen(true)}>
+                    <NeoButton onClick={() => setModal(prev => ({ ...prev, isModalOpen: true }))}>
                         <Plus className="w-4 h-4 mr-2" />
                         Add Subject
                     </NeoButton>
@@ -104,11 +129,11 @@ export default function SubjectsPage() {
                         <div className="w-16 h-16 rounded-full bg-[var(--color-accent-cyan)]/10 flex items-center justify-center mb-4">
                             <BookOpen className="w-8 h-8 text-[var(--color-accent-cyan)]" />
                         </div>
-                        <h3 className="text-xl font-semibold mb-2 text-white">No Subjects Yet</h3>
+                        <h3 className="text-xl font-semibold mb-2 text-[var(--foreground)]">No Subjects Yet</h3>
                         <p className="text-gray-400 max-w-md mb-6">
                             Add subjects to start tracking your attendance.
                         </p>
-                        <NeoButton variant="secondary" onClick={() => setIsModalOpen(true)}>
+                        <NeoButton variant="secondary" onClick={() => setModal(prev => ({ ...prev, isModalOpen: true }))}>
                             <Plus className="w-4 h-4 mr-2" />
                             Add First Subject
                         </NeoButton>
@@ -118,34 +143,47 @@ export default function SubjectsPage() {
                         {subjects.map((subject) => {
                             const pct = subject.total_classes > 0 ? (subject.attended_classes / subject.total_classes) * 100 : 0;
                             return (
-                                <GlassCard key={subject.id} className="relative group hover:border-white/20 transition-all">
+                                <GlassCard key={subject.id} className="relative group hover:border-[var(--foreground)]/20 transition-all">
                                     <div className="flex justify-between items-start mb-4">
                                         <div>
-                                            <h3 className="text-xl font-bold text-white">{subject.name}</h3>
+                                            <h3 className="text-xl font-bold text-[var(--foreground)]">{subject.name}</h3>
                                             <p className="text-sm text-gray-500">Target: {subject.target_attendance}%</p>
                                         </div>
 
-                                        <div className="relative" onClick={e => e.stopPropagation()}>
+                                        <div className="relative" onPointerDown={e => e.stopPropagation()}>
                                             <button
-                                                onClick={() => setActiveMenuId(activeMenuId === subject.id ? null : subject.id)}
-                                                className="p-1 hover:bg-white/10 rounded-full transition-colors text-gray-400 hover:text-white"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setActiveMenuId(activeMenuId === subject.id ? null : subject.id);
+                                                }}
+                                                className="p-1 hover:bg-[var(--foreground)]/10 rounded-full transition-colors text-gray-400 hover:text-[var(--foreground)]"
                                             >
                                                 <MoreVertical className="w-5 h-5" />
                                             </button>
                                             {activeMenuId === subject.id && (
-                                                <div className="absolute right-0 top-8 z-50 w-32 bg-[#1A1A1A] border border-white/10 rounded-lg shadow-[var(--shadow-glow)] overflow-hidden">
-                                                    <button
-                                                        onClick={() => handleEditSubject(subject)}
-                                                        className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-300 hover:bg-white/10 hover:text-white transition-colors text-left"
-                                                    >
-                                                        <Edit className="w-3 h-3" /> Edit
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleDeleteSubject(subject.id, subject.name)}
-                                                        className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors text-left"
-                                                    >
-                                                        <Trash2 className="w-3 h-3" /> Delete
-                                                    </button>
+                                                <div className="absolute right-0 top-8 z-50 w-40 bg-[var(--color-bg-start)] border border-[var(--color-border)] rounded-lg shadow-[var(--shadow-glow)] overflow-hidden">
+                                                    <div className="p-1">
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleEditSubject(subject);
+                                                            }}
+                                                            className="w-full flex items-center px-4 py-3 text-sm text-[var(--foreground)] hover:bg-[var(--foreground)]/5 rounded-lg transition-colors font-medium border-b border-[var(--foreground)]/5"
+                                                        >
+                                                            <Edit className="w-4 h-4 mr-3 text-[var(--color-primary-start)]" />
+                                                            Edit Subject
+                                                        </button>
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                promptDeleteSubject(subject.id, subject.name);
+                                                            }}
+                                                            className="w-full flex items-center px-4 py-3 text-sm text-red-500 hover:bg-red-500/10 rounded-lg transition-colors font-semibold"
+                                                        >
+                                                            <Trash2 className="w-4 h-4 mr-3" />
+                                                            Delete Subject
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             )}
                                         </div>
@@ -154,13 +192,13 @@ export default function SubjectsPage() {
                                     <div className="space-y-2">
                                         <div className="flex justify-between text-sm">
                                             <span className="text-gray-400">Classes Held</span>
-                                            <span className="text-white font-medium">{subject.total_classes}</span>
+                                            <span className="text-[var(--foreground)] font-medium">{subject.total_classes}</span>
                                         </div>
                                         <div className="flex justify-between text-sm">
                                             <span className="text-gray-400">Attended</span>
-                                            <span className="text-white font-medium">{subject.attended_classes}</span>
+                                            <span className="text-[var(--foreground)] font-medium">{subject.attended_classes}</span>
                                         </div>
-                                        <div className="mt-4 pt-4 border-t border-white/5 flex justify-between items-center">
+                                        <div className="mt-4 pt-4 border-t border-[var(--foreground)]/5 flex justify-between items-center">
                                             <span className="text-sm text-gray-400">Current Status</span>
                                             <span className={cn(
                                                 "text-lg font-bold",
@@ -177,15 +215,34 @@ export default function SubjectsPage() {
                 )}
 
                 <AddSubjectModal
-                    isOpen={isModalOpen}
+                    key={modal.editingSubject?.id || 'new'}
+                    isOpen={modal.isModalOpen}
                     onClose={() => {
-                        setIsModalOpen(false);
-                        setEditingSubject(null);
+                        setModal(prev => ({ ...prev, isModalOpen: false, editingSubject: null }));
                     }}
                     onSuccess={fetchSubjects}
-                    initialData={editingSubject}
+                    initialData={modal.editingSubject}
                 />
             </div>
+
+            <ConfirmModal
+                isOpen={!!modal.subjectToDelete}
+                onClose={() => setModal(prev => ({ ...prev, subjectToDelete: null }))}
+                onConfirm={handleDeleteConfirm}
+                title="Delete Subject"
+                description={`Are you sure you want to delete "${modal.subjectToDelete?.name}"? This will delete all attendance records for this subject.`}
+                type="danger"
+                confirmText="Delete"
+                isLoading={modal.isDeleting}
+            />
+
+            <AlertModal
+                isOpen={!!modal.alertMessage}
+                onClose={() => setModal(prev => ({ ...prev, alertMessage: null }))}
+                title={modal.alertMessage?.title || ""}
+                description={modal.alertMessage?.description || ""}
+                type={modal.alertMessage?.type}
+            />
         </div>
     );
 }

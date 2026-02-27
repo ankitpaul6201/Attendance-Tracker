@@ -8,11 +8,11 @@
 
 ## 📱 Download APK
 
-> **Android APK is included directly in this repo.**
+> **Android APK is distributed via GitHub Releases.**
 
-👉 **[Download app-debug.apk](./releases/app-debug.apk)**
+👉 **[Download latest APK from Releases](https://github.com/ankitpaul6201/Attendance-Tracker/releases/latest)**
 
-Install it on any Android device (enable *Install from unknown sources* in Settings → Security).
+Install on any Android device — enable *Install from unknown sources* in Settings → Security.
 
 > [!NOTE]
 > If the app shows **"Fetch Failed"** or **network errors**, try connecting through a VPN. Some ISPs block Supabase API endpoints in certain regions.

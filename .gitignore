@@ -39,3 +39,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Android build outputs (APK too large for git — use GitHub Releases)
+android/app/build/
+android/.gradle/
+android/build/
+releases/*.apk

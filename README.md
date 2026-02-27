@@ -12,8 +12,14 @@
 
 Install on any Android device — enable *"Install from unknown sources"* in Settings → Security before installing.
 
+> [!WARNING]
+> **Google Play Protect Warning:** When you install this APK, Android may show a "Play Protect" warning saying the app is from an unknown source. This is **normal for apps not on the Play Store**. Tap **"Install anyway"** to proceed — the app is safe.
+>
+> ⚠️ **Only download from this official GitHub Releases link above.** Do NOT install APKs of this app from any other website, group, or person — those may be modified/malicious versions.
+
 > [!IMPORTANT]
 > If the app shows **"Fetch Failed"** or refuses to connect, **enable a VPN** on your device. Some ISPs block the backend servers in certain regions.
+
 
 ---
 
